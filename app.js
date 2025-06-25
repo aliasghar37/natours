@@ -1,118 +1,33 @@
-const fs = require("fs");
 const express = require("express");
+const morgan = require("morgan");
 const { error } = require("console");
+const { create } = require("domain");
 const app = express();
+const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
+const userRouter = require(`${__dirname}/routes/userRoutes.js`);
+
+// MIDDLEWARES
+if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
+
 
 app.use(express.json());
-// app.get("/", (req, res) => {
-//     res.status(200);
-//     res.json({
-//         message: "Hello from the server sise!",
-//         from: "server",
-//         app: "natours",
-//     });
-// });
 
-// app.post("/post", (req, res) => {
-//     res.status(200).send("Hello it's post method of http");
-// });
+app.use(express.static(`${__dirname}/public/img/`));
 
-const tours = JSON.parse(
-    fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
-);
-
-app.get("/api/v1/tours", (req, res) => {
-    res.statusCode = 200;
-    res.json({
-        status: "success",
-        result: tours.length,
-        data: { tours },
-    });
+app.use((req, res, next) => {
+    console.log("Hello from the middleware 👋");
+    next();
 });
 
-app.get("/api/v1/tours/:id", (req, res) => {
-    console.log(req);
-    const id = +req.params.id;
-    const tour = tours.find((el) => el.id === id);
-    // If no tour found
-    if (!tour) {
-        res.status(404).json({
-            status: "fail",
-            message: "Invalid ID",
-        });
-    }
-
-    res.status(200).json({
-        status: "success",
-        data: {
-            tour,
-        },
-    });
+app.use((req, res, next) => {
+    req.requestTime = new Date().toISOString();
+    console.log(req.requestTime);
+    next();
 });
 
-app.post("/api/v1/tours", (req, res) => {
-    // console.log(req.body);
-    // const id = +req.params.id;
-    // const tour = tours.find((el) => el.id === id);
-    const newId = tours[tours.length - 1].id + 1;
-    const newTour = Object.assign({ id: newId }, req.body);
-    tours.push(newTour);
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
-            res.status(201).json({ message: "success", data: newTour });
-        }
-    );
+// ROUTE HANDLERS
 
-    // res.send("done");
-});
+app.use("/api/v1/tours", tourRouter);
+app.use("/api/v1/users", userRouter);
 
-app.patch("/api/v1/tours/", (req, res) => {
-    let tour = tours.find((el) => el.id === req.body.id);
-    if (!tour) {
-        res.status(404).send({
-            status: "fail",
-            message: "Invalid ID",
-        });
-    }
-    tours[req.body.id] = { ...req.body };
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
-            res.status(201).json({
-                status: "success",
-                data: {
-                    tour: tours[req.body.id],
-                },
-            });
-        }
-    );
-});
-app.delete("/api/v1/tours/:id", (req, res) => {
-    const id = +req.params.id;
-    let tour = tours.findIndex((el) => el.id === id);
-    if (!tour) {
-        res.status(404).send({
-            status: "fail",
-            message: "Invalid ID",
-        });
-    }
-    tours.splice(tour, 1);
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
-            res.status(204).json({
-                status: "success",
-                data: null,
-            });
-        }
-    );
-});
-
-const port = 3000;
-app.listen(port, () => {
-    console.log(`App is listenning at ${port}`);
-});
+module.exports = app;
