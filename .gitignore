@@ -1,2 +1,3 @@
 # .gitignore file
 config.env
+.eslintrc.json

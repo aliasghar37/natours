@@ -1,24 +1,24 @@
 {
-  "name": "natours",
-  "version": "1.0.0",
-  "description": "Learning node, express and mongoDB",
-  "license": "ISC",
-  "author": "Ali Asghar",
-  "type": "commonjs",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "cross-env NODE_ENV=development nodemon server.js",
-    "start-prod": "cross-env NODE_ENV=production nodemon server.js"
-  },
-  "dependencies": {
-    "cross-env": "^7.0.3",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "mongoose": "^8.16.0",
-    "morgan": "^1.10.0"
-  },
-  "devDependencies": {
-    "prettier": "^3.5.3"
-  }
+    "name": "natours",
+    "version": "1.0.0",
+    "description": "Learning node, express and mongoDB",
+    "license": "ISC",
+    "author": "Ali Asghar",
+    "type": "commonjs",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon server.js",
+        "start-prod": "cross-env NODE_ENV=production nodemon server.js"
+    },
+    "dependencies": {
+        "cross-env": "^7.0.3",
+        "dotenv": "^16.5.0",
+        "express": "^5.1.0",
+        "mongoose": "^8.16.0",
+        "morgan": "^1.10.0"
+    },
+    "devDependencies": {
+        "prettier": "^3.5.3"
+    }
 }

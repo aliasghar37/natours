@@ -1,4 +1,5 @@
 const express = require("express");
+// const qs = require("qs");
 const morgan = require("morgan");
 const { error } = require("console");
 const { create } = require("domain");
@@ -9,8 +10,10 @@ const userRouter = require(`${__dirname}/routes/userRoutes.js`);
 // MIDDLEWARES
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
-
 app.use(express.json());
+
+// Setting the query parser to allow nested objects for api query parsing
+app.set("query parser", "extended");
 
 app.use(express.static(`${__dirname}/public/img/`));
 
