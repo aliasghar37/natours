@@ -1,55 +1,29 @@
-const { json } = require("express");
-
 const Tour = require(`${__dirname}/../models/tourModel.js`);
+const ApiFeatures = require(`${__dirname}/../utils/ApiFeatures.js`);
+
+// Middleware -> pre-filling the query for 5 cheap tours only
+exports.aliasTopTours = (req, res, next) => {
+    // As we cannot modify the req.query that is why using this:
+    const processedQuery = { ...req.query };
+    processedQuery.limit = "5";
+    processedQuery.sort = "-ratingsAverage,price";
+    processedQuery.fields = "name,price,ratingsAverage,summary,difficulty";
+
+    req.processedQuery = processedQuery;
+    next();
+};
 
 exports.getAllTours = async (req, res) => {
     try {
-        // BUILDING QUERY
-
-        // 1-a) Filtering
-        const queryObject = { ...req.query };
-        const excludedFields = ["page", "sort", "limit", "fields"];
-        excludedFields.forEach((el) => delete queryObject[el]);
-
-        // 1-b) Advance filtering
-        let queryString = JSON.stringify(queryObject);
-        queryString = queryString.replace(
-            /\b(gte|gt|lt|lte)\b/g,
-            (match) => `$${match}`
-        );
-        let query = Tour.find(JSON.parse(queryString));
-
-        // 2) Sorting
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(",").join(" ");
-            query = query.sort(sortBy);
-        } else {
-            query = query.sort("-createdAt");
-        }
-
-        // 3) Fields limiting
-        if (req.query.fields) {
-            const fields = req.query.fields.split(",").join(" ");
-            query = query.select(fields);
-        } else {
-            query = query.select("-__v");
-        }
-
-        // 4) Pagination
-        const page = +req.query.page || 1;
-        const limit = +req.query.limit || 100;
-        const skip = (page - 1) * limit;
-
-        query = query.skip(skip).limit(limit);
-
-        // Page not found
-        if (req.query.page) {
-            const numTours = await Tour.countDocuments();
-            if (skip >= numTours) throw new Error("⛔ Page not found");
-        }
+        const queryToUse = req.processedQuery || req.query;
 
         // EXECUTING QUERY
-        const tours = await query;
+        const features = new ApiFeatures(Tour.find(), queryToUse)
+            .filter()
+            .sort()
+            .limitFields()
+            .paginate();
+        const tours = await features.query;
 
         // SENDING RESPONSE
         res.status(200).json({
