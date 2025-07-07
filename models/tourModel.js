@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const User = require(`${__dirname}/userModel.js`);
 
 // MONGOOSE SCHEMA
 const tourSchema = mongoose.Schema(
@@ -66,7 +67,7 @@ const tourSchema = mongoose.Schema(
             trim: true,
             required: [true, "A tour must have a summary"],
         },
-        descriptoin: {
+        description: {
             type: String,
             trim: true,
         },
@@ -85,7 +86,34 @@ const tourSchema = mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        startLocation: {
+            // GeoJSON
+            type: {
+                type: String,
+                enum: ["Point"],
+                default: "Point",
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+        },
+        // Embedding location docs in tour doc
+        locations: [
+            {
+                type: {
+                    type: String,
+                    enum: ["Point"],
+                    default: "Point",
+                },
+                coordinates: [Number],
+                address: String,
+                description: String,
+                day: Number,
+            },
+        ],
+        guides: [{ type: mongoose.Schema.ObjectId, ref: "User" }],
     },
+
     {
         toJSON: { virtuals: true },
         toObject: { virtuals: true },
@@ -97,15 +125,39 @@ tourSchema.virtual("durationWeeks").get(function () {
     return this.duration / 7;
 });
 
+// Virtual populate
+tourSchema.virtual("review", {
+    ref: "Review",
+    foreignField: "tour",
+    localField: "_id",
+});
+
 // DOCUMENT MIDDLEWARE
 tourSchema.pre("save", function (next) {
     this.slug = slugify(this.name, { lower: true });
     next();
 });
 
+// Embedding Middlware
+// tourSchema.pre("save", async function (next) {
+//     const guidesPromises = this.guides.map(
+//         // returns an array of promises
+//         async (id) => await User.findById(id)
+//     );
+//     this.guides = await Promise.all(guidesPromises);
+//     next();
+// });
+
 // QUERY MIDDLEWARE
 tourSchema.pre(/^find/, function (next) {
     this.find({ secretTour: { $ne: true } });
+    next();
+});
+tourSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: "guides",
+        select: "-passwordChangedAt -__v",
+    });
     next();
 });
 

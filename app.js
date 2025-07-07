@@ -12,6 +12,7 @@ const globalErrorHandler = require(
 );
 const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
 const userRouter = require(`${__dirname}/routes/userRoutes.js`);
+const reviewRouter = require(`${__dirname}/routes/reviewRoutes.js`);
 
 const app = express();
 
@@ -41,14 +42,11 @@ app.use((req, res, next) => {
     req.params = mongoSanitize(req.params);
     next();
 });
-app.use((req, res, next) => {
-    console.log(req.body);
-    next();
-});
 
 // // DATA SANITIZATION AGAIN XSS
 app.use(xss());
 
+// Parameter population prevention
 app.use(
     hpp({
         whitelist: [
@@ -71,6 +69,7 @@ app.use(express.static(`${__dirname}/public/img/`));
 // ROUTES
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 // HANDLE ALL UNHANDLED ROUTES
 app.all(/.*/, (req, res, next) => {
