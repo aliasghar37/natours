@@ -1,6 +1,7 @@
 const Tour = require(`${__dirname}/../models/tourModel.js`);
-const ApiFeatures = require(`${__dirname}/../utils/ApiFeatures.js`);
 const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
+const handlerFactory = require(`${__dirname}/../controllers/handlerFactory.js`);
+const AppError = require(`${__dirname}/../utils/AppError.js`);
 
 // MIDDLEWARE -> pre-filling the query for 5 cheap tours only
 exports.aliasTopTours = (req, res, next) => {
@@ -87,62 +88,77 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
 });
 
 // ROUTE CALLBACKS
-exports.getAllTours = catchAsync(async (req, res, next) => {
-    const queryToUse = req.processedQuery || req.query;
+exports.getAllTours = handlerFactory.getAll(Tour);
+exports.getTour = handlerFactory.getOne(Tour, { path: "reviews" });
+exports.createTour = handlerFactory.createOne(Tour);
+exports.updateTour = handlerFactory.updateOne(Tour);
+exports.deleteTour = handlerFactory.deleteOne(Tour);
 
-    // EXECUTING QUERY
-    const features = new ApiFeatures(Tour.find(), queryToUse)
-        .filter()
-        .sort()
-        .limitFields()
-        .paginate();
-    const tours = await features.query;
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+    // /tours-within/:distance/center/:latlng/unit/:unit
+    const { distance, latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(",");
 
-    res.status(200).json({
-        status: "success",
-        result: tours.length,
-        data: { tours },
+    if (!lat || !lng) {
+        const err = new AppError("Lattitue and longitude are not defined", 400);
+        return next(err);
+    }
+
+    // Convert the value into radians
+    const radius = unit === "mi" ? distance / 3963.2 : distance / 6378.1;
+
+    // Query for MongoDB Compass
+    // {startLocation: { $geoWithin: { $centerSphere: [[-118.113491, 34.111745], 0.1] } }}
+
+    const tour = await Tour.find({
+        startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
     });
-});
 
-exports.getTour = catchAsync(async (req, res, next) => {
-    const tour = await Tour.findById(req.params.id).populate("review");
+    if (!tour) {
+        const err = new AppError("No tours found", 404);
+        return next(err);
+    }
 
     res.status(200).json({
-        status: "success",
+        status: "message",
+        results: tour.length,
         data: {
-            tour,
+            data: tour,
         },
     });
 });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-    const newTour = await Tour.create(req.body);
-    res.status(201).json({
-        status: "success",
-        data: {
-            tour: newTour,
-        },
-    });
-});
+exports.getDistances = async (req, res, next) => {
+    const { latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(",");
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-    const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-    });
+    if (!lat || !lng) {
+        const err = new AppError("Lattitue and longitude are not defined", 400);
+        return next(err);
+    }
+
+    const multiplier = unit === "mi" ? 0.000621371 : 0.001;
+    const distances = await Tour.aggregate([
+        {
+            $geoNear: {
+                near: {
+                    type: "Point",
+                    coordinates: [+lng, +lat],
+                },
+                distanceField: "distance",
+                distanceMultiplier: multiplier,
+            },
+        },
+        {
+            $project: {
+                name: 1,
+                distance: 1,
+            },
+        },
+    ]);
+
     res.status(200).json({
         status: "success",
-        data: {
-            tour: updatedTour,
-        },
+        data: { data: distances },
     });
-});
-
-exports.deleteTour = catchAsync(async (req, res, next) => {
-    await Tour.findByIdAndDelete(req.params.id);
-    res.status(204).json({
-        status: "success",
-        data: null,
-    });
-});
+};

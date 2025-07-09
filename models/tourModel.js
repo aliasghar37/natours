@@ -3,7 +3,7 @@ const slugify = require("slugify");
 const User = require(`${__dirname}/userModel.js`);
 
 // MONGOOSE SCHEMA
-const tourSchema = mongoose.Schema(
+const tourSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -44,6 +44,7 @@ const tourSchema = mongoose.Schema(
             default: 4.5,
             min: [1.0, "Rating must be above 1.0"],
             max: [5.0, "Rating must be below 5.0"],
+            set: (val) => Math.round(val * 10) / 10,
         },
         ratingsQuantity: {
             type: Number,
@@ -120,13 +121,18 @@ const tourSchema = mongoose.Schema(
     }
 );
 
+// Creating index to improve query performance
+tourSchema.index({ price: 1, ratingsAverage: 1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation : "2dsphere" })
+
 // VIRTUAL PROPERTY
 tourSchema.virtual("durationWeeks").get(function () {
     return this.duration / 7;
 });
 
 // Virtual populate
-tourSchema.virtual("review", {
+tourSchema.virtual("reviews", {
     ref: "Review",
     foreignField: "tour",
     localField: "_id",
@@ -162,10 +168,10 @@ tourSchema.pre(/^find/, function (next) {
 });
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre("aggregate", function (next) {
-    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-    next();
-});
+// tourSchema.pre("aggregate", function (next) {
+//     this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//     next();
+// });
 
 const Tour = mongoose.model("Tour", tourSchema);
 module.exports = Tour;
