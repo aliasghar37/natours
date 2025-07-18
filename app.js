@@ -5,16 +5,24 @@ const helmet = require("helmet");
 const mongoSanitize = require("mongo-sanitize");
 const { xss } = require("express-xss-sanitizer");
 const hpp = require("hpp");
-
+const path = require("path");
 const AppError = require("./utils/AppError");
 const globalErrorHandler = require(
     `${__dirname}/controllers/errorController.js`
 );
+const cookieParser = require("cookie-parser");
 const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
 const userRouter = require(`${__dirname}/routes/userRoutes.js`);
 const reviewRouter = require(`${__dirname}/routes/reviewRoutes.js`);
+const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 
 const app = express();
+
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
+
+// Serving static files
+app.use(express.static(path.join(__dirname, "public")));
 
 // GLOBAL MIDDLEWARES
 
@@ -34,6 +42,7 @@ app.use("/api", limiter);
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: "10kb" }));
+app.use(cookieParser());
 
 // DATA SANITIZATION AGAINST NOSSQL QUERY INJECTION
 app.use((req, res, next) => {
@@ -63,13 +72,24 @@ app.use(
 // Setting the query parser to allow nested objects for api query parsing
 app.set("query parser", "extended");
 
-// Serving static files
-app.use(express.static(`${__dirname}/public/img/`));
+app.use((req, res, next) => {
+    res.setHeader(
+        "Content-Security-Policy",
+        "img-src 'self' data: https://api.maptiler.com"
+    );
+    next();
+});
+
+// app.use((req, res, next) => {
+//     console.log(req.cookies);
+//     next();
+// });
 
 // ROUTES
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/", viewRouter);
 
 // HANDLE ALL UNHANDLED ROUTES
 app.all(/.*/, (req, res, next) => {
