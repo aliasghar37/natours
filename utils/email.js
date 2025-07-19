@@ -13,11 +13,11 @@ const sendEmail = async (options) => {
     });
     // 2) define the email options
     const mailOptions = {
-        from: "adam@natours.io",
+        from: "admin@natours.io",
         to: options.email,
         subject: options.subject,
         text: options.message,
-        // html:
+        html: options.html,
     };
     // 3) send the email with nodemailer
     await transporter.sendMail(mailOptions);
