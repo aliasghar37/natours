@@ -10,13 +10,11 @@ module.exports = class Email {
         this.url = url;
         this.to = user.email;
     }
-    
+
     brevo() {
         const emailApi = new TransactionalEmailsApi();
         if (!process.env.BREVO_API_KEY) {
-            console.error(
-                "Error: BREVO_API_KEY is not set in environment variables."
-            );
+            console.error("ERROR 💥: Brevo API not found.");
         }
         emailApi.authentications.apiKey.apiKey = process.env.BREVO_API_KEY;
         return emailApi;

@@ -5,7 +5,7 @@ export const searchTours = async (name) => {
     try {
         const res = await axios({
             method: "GET",
-            url: `http://127.0.0.1:3000/api/v1/tours?name=${encodeURIComponent(name)}`,
+            url: `/api/v1/tours?name=${encodeURIComponent(name)}`,
         });
         const tours = res.data.data.data;
         if (res.data.status === "success") {
@@ -27,7 +27,6 @@ export const searchTours = async (name) => {
                 const date = new Date(tour.startDates[0]);
                 const formattedDate = `${month[date.getMonth()]} ${date.getFullYear()}`;
 
-                console.log(formattedDate);
                 const markup = `
                     <div class="card">
                         <div class="card__header">
@@ -79,7 +78,7 @@ export const searchTours = async (name) => {
                                 <span>${tour.maxGroupSize} people</span>
                             </div>
                         </div>
-~
+
                         <div class="card__footer">
                             <p>
                                 <span class="card__footer-value">$${tour.price}</span>

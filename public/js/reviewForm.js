@@ -5,7 +5,7 @@ export const addReview = async (userId, tourId, rating, review) => {
     try {
         const res = await axios({
             method: "POST",
-            url: `http://127.0.0.1:3000/api/v1/tours/${tourId}/reviews`,
+            url: `/api/v1/tours/${tourId}/reviews`,
             data: {
                 review,
                 rating,
@@ -16,7 +16,7 @@ export const addReview = async (userId, tourId, rating, review) => {
             showAlert("success", "Review has been added successfully!");
         }
     } catch (error) {
-        console.log(error);
+        console.log("ERROR 💥", error);
         showAlert("error", `ERROR: ${error.response.data.message}`);
     }
 };

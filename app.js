@@ -11,6 +11,8 @@ const globalErrorHandler = require(
     `${__dirname}/controllers/errorController.js`
 );
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
+
 const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
 const userRouter = require(`${__dirname}/routes/userRoutes.js`);
 const reviewRouter = require(`${__dirname}/routes/reviewRoutes.js`);
@@ -82,6 +84,8 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(compression());
+
 // app.use((req, res, next) => {
 //     console.log(req.cookies);
 //     next();
@@ -91,7 +95,7 @@ app.use((req, res, next) => {
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
-app.use("/api/v1/bookings", bookingRouter)
+app.use("/api/v1/bookings", bookingRouter);
 app.use("/", viewRouter);
 
 // HANDLE ALL UNHANDLED ROUTES

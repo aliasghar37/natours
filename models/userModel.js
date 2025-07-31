@@ -102,7 +102,6 @@ userSchema.methods.comparePassword = async function (
 userSchema.methods.changedPasswordAfter = function (JWTIssuedAt) {
     if (this.passwordChangedAt) {
         const passChangedAt = this.passwordChangedAt.getTime() / 1000;
-        console.log(passChangedAt, JWTIssuedAt);
 
         // password changed time < token issued time
         // (2025-07-12 < 2025-7-14)
@@ -124,7 +123,6 @@ userSchema.methods.createPasswordResetToken = async function () {
         .digest("hex");
     this.passwordResetTokenExpires = Date.now() + 5 * 60 * 1000;
 
-    console.log({ resetToken }, this.passwordResetToken);
     // return the plain reset token
     return resetToken;
 };

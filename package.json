@@ -10,7 +10,8 @@
         "start": "cross-env NODE_ENV=development nodemon server.js",
         "start-prod": "cross-env NODE_ENV=production nodemon server.js",
         "debug": "ndb server.js",
-        "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js/distjs --out-file bundle.js"
+        "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js/distjs --out-file bundle.js",
+        "build:js": "parcel build ./public/js/index.js --out-dir ./public/js/distjs --out-file bundle.js"
     },
     "targets": {
         "main": false,
@@ -23,6 +24,7 @@
         "@getbrevo/brevo": "^2.5.0",
         "axios": "^1.10.0",
         "bcryptjs": "^3.0.2",
+        "compression": "^1.8.1",
         "cookie-parser": "^1.4.7",
         "cross-env": "^7.0.3",
         "dotenv": "^16.5.0",
