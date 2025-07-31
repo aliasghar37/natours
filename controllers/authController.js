@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
 const AppError = require(`${__dirname}/../utils/AppError.js`);
 const { promisify } = require("util");
-const sendEmail = require(`${__dirname}/../utils/email.js`);
+const Email = require(`${__dirname}/../utils/email.js`);
 const crypto = require("crypto");
 
 // SIGN/CREATE TOKEN
@@ -47,15 +47,18 @@ exports.signup = catchAsync(async (req, res, next) => {
     // exclude password from sending in response
     const selectedUser = await User.findById(newUser._id);
 
-    res.status(201).json({
-        status: "success",
-        data: {
-            selectedUser,
-        },
-    });
+    const url = `${req.protocol}://${req.get("host")}/me`;
+    await new Email(selectedUser, url).sendWelcome();
 
     // IMMEDIATELY LOG IN THE USER AS HE SIGNS UP
-    // createAndSendToken(selectedUser, 200, res);
+    createAndSendToken(selectedUser, 200, res);
+
+    // res.status(201).json({
+    //     status: "success",
+    //     data: {
+    //         selectedUser,
+    //     },
+    // });
 });
 
 // LOG IN
@@ -97,7 +100,6 @@ exports.protect = catchAsync(async (req, res, next) => {
         );
         return next(err);
     }
-
     // 2) Verify token
     const verifyTokenAsync = promisify(jwt.verify);
     const decoded = await verifyTokenAsync(token, process.env.JWT_SECRET);
@@ -122,9 +124,10 @@ exports.protect = catchAsync(async (req, res, next) => {
         return next(err);
     }
 
-    // Put entire user data on the req
+    // Put entire user data on the req and res
     req.user = currentUser;
-
+    res.locals.user = currentUser;
+    // createAndSendToken(currentUser, 200, res);
     // GRANT ACCESS TO THE PROTECTED ROUTE
     next();
 });
@@ -203,119 +206,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     // Send it to user's email
-    // A) for API
-    // const resetURL = `${req.protocol}://${req.get("host")}/api/v1/users/resetPasswod/${resetToken}`;
-    // const message = `Forgot your password? Submit a PATCH request with new password and passwordConfirm to: ${resetURL}\nIf you didn't forget, please ignore this.`;
-
-    // B) for Rendered Website
-    const resetURL = `${req.protocol}://${req.get("host")}/resetPassword/${resetToken}`;
-    const message = `Hi ${user.name.split(" ")[0]}\n\nForgot your password?\nWe received a request to reset the password for your account.\n\nTo reset your password, click on the below link:\n${resetURL}\n\nIf you didn't sent this request, please ignore this.`;
-    const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NATOURS - Reset Password</title>
-        <style>
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin: 0;
-                background: #f5f5f5;
-            }
-            
-            .email-container {
-                max-width: 500px;
-                margin: 50px auto;
-                background: white;
-                border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            }
-            
-            .header {
-                background: #55c57a;
-                color: white;
-                padding: 30px;
-                text-align: center;
-            }
-            
-            .header h1 {
-                margin: 0;
-                font-size: 28px;
-                letter-spacing: 3px;
-            }
-            
-            .title {
-                background: #47a869;
-                color: white;
-                padding: 20px;
-                text-align: center;
-                font-size: 18px;
-            }
-            
-            .content {
-                padding: 30px;
-                color: #666;
-                line-height: 1.6;
-            }
-            
-            .btn {
-                background: #55c57a;
-                color: white;
-                padding: 8px 20px;
-                border: none;
-                border-radius: 5px;
-                font-size: 16px;
-                cursor: pointer;
-                margin: 40px 0;
-                text-decoration: none;
-            }
-            
-            .footer {
-                background: #55c57a;
-                color: white;
-                padding: 20px;
-                text-align: center;
-                font-size: 14px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="email-container">
-            <div class="header">
-                <h1>NATOURS</h1>
-            </div>
-            
-            <div class="title">
-                Please reset your password
-            </div>
-            
-            <div class="content">
-                <p>Hi ${user.name.split(" ")[0]},</p>
-                <p>We received a request to reset the password for your account.</p>
-                <p>To reset your password, please follow the link below:</p>
-                
-                <a class="btn" href="${resetURL}">Reset Password</a>
-                
-                <p><em>Please ignore this email if you did not request a password change.</em></p>
-            </div>
-            
-            <div class="footer">
-                Contact: admin@natours.io | Company © All Rights Reserved
-            </div>
-        </div>
-    </body>
-    </html>`;
     try {
-        await sendEmail({
-            email: user.email,
-            subject: "Please reset your password",
-            message,
-            html,
-        });
+        const resetURL = `${req.protocol}://${req.get("host")}/resetPassword/${resetToken}`;
+        await new Email(user, resetURL).sendPasswordReset();
 
-        // createAndSendToken(user, 200, res);
         res.status(200).json({
             status: "success",
         });
@@ -352,7 +246,7 @@ exports.resetPassword = async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpires = undefined;
-    console.log(user);
+    
     await user.save({ validateBeforeSave: true });
 
     // 3) update changedpasswordat property for user using mongoose middleware

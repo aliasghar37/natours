@@ -1,7 +1,7 @@
 extends base
 
 //- block append head
-    //- script(src="/js/mapbox.js")
+//-     script(src="https://js.stripe.com/v3/")
 
 mixin overview(label, val, icon) 
     .overview-box__detail
@@ -13,7 +13,7 @@ mixin overview(label, val, icon)
 mixin reviewCard(review)
     .reviews__card
         .reviews__avatar
-            img.reviews__avatar-img(src=`/img/users/${review.user.photo}`, alt=`${review.user.name}`)
+            img.reviews__avatar-img(src=`/img/users/${review.user.photo ? review.user.photo : "default.jpg" }`, alt=`${review.user.name}`)
             h6.reviews__user= review.user.name
         p.reviews__text= review.review
         .reviews__rating
@@ -49,12 +49,12 @@ block content
                     +overview("Difficulty", tour.difficulty, "trending-up")
                     +overview("Participants", `${tour.maxGroupSize} people`, "user")
                     +overview("Rating", `${Math.round(tour.ratingsAverage * 10) / 10} / 5`, "star")
-                
+
                 .overview-box__group
                     h2.heading-secondary.ma-bt-lg Your tour guides
                     each guide in tour.guides  
                         .overview-box__detail
-                            img.overview-box__img(src=`/img/users/${guide.photo}`, alt=`${guide.role}`)
+                            img.overview-box__img(src=`/img/users/${guide.photo ? guide.photo : "default.jpg"}`, alt=`${guide.role}`)
                             - if (guide.role === "lead-guide")
                                 span.overview-box__label Lead Guide
                             - if (guide.role === "guide")
@@ -70,16 +70,47 @@ block content
         each image, i in tour.images
             .picture-box
                 img.picture-box__img(src=`/img/tours/${image}`, alt=`${tour.image} Tour ${i + 1}`, class=`picture-box__img--${i + 1}`)
-            
+
 
     section.section-map
         #map(data-locations=`${JSON.stringify(tour.locations)}`, data-maptilerKey=process.env.MAPTILER_KEY)
 
     section.section-reviews
         .reviews
+            .reviews__card
+                form(class="review-form" style='width: 100%;' data-user=`${user ? user._id : ""}` data-tour=`${tour.id}`)
+                    .reviews__avatar(style='justify-content: center; margin-bottom: 1.5rem;')
+                        //- img.reviews__avatar-img(src='img/users/default.jpg' alt='Your avatar')
+                        h6.reviews__user Add review
+                    .form__group(style='margin-bottom: 1.5rem;')
+                        textarea.form__input(placeholder='Write your review...' rows='3' style='font-style: italic;' required='')
+                    .reviews__rating(style='justify-content: center; margin-bottom: 1.5rem;')
+                        - for(let i = 1; i<=5; i++)
+                            svg.reviews__star(class=`reviews__star--inactive`)
+                                use(xlink:href='/img/icons.svg#icon-star')
+                        
+                    .form__group(style='text-align: center;')
+                        button.btn-small(type='submit') Submit
             each review in tour.reviews
                 +reviewCard(review)
-                        
+
+            //- .max__width
+            //-     form.signup-form(style='margin-top: 5rem;')
+            //-         .form__group
+            //-             label.form__label(for='review-text') Add review
+            //-             textarea#review-text.form__input(rows='4' placeholder='What did you think of the tour?' required='')
+            //-         .form__group
+            //-             label.form__label(for='review-rating') Rating
+            //-             select#review-rating.form__input(required='')
+            //-                 option(value='') Choose a rating
+            //-                 option(value='5') &starf;&starf;&starf;&starf;&starf; - Excellent
+            //-                 option(value='4') &starf;&starf;&starf;&starf;&star; - Very good
+            //-                 option(value='3') &starf;&starf;&starf;&star;&star; - Good
+            //-                 option(value='2') &starf;&starf;&star;&star;&star; - Fair
+            //-                 option(value='1') &starf;&star;&star;&star;&star; - Poor
+            //-         .form__group
+            //-             button.btn.btn--green Submit review
+
 
     section.section-cta
         .cta
@@ -90,4 +121,7 @@ block content
             .cta__content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
-                button.btn.btn--green.span-all-rows Book tour now!
+                if user
+                    button(class="btn btn--green span-all-rows", id="book-tour", data-tourId=`${tour.id}`) Book tour now!
+                else
+                    a.btn.btn--green.span-all-rows(href="/login") Log in to book tour

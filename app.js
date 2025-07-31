@@ -15,6 +15,7 @@ const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
 const userRouter = require(`${__dirname}/routes/userRoutes.js`);
 const reviewRouter = require(`${__dirname}/routes/reviewRoutes.js`);
 const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
+const bookingRouter = require(`${__dirname}/routes/bookingRoutes.js`);
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api", limiter);
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 
 // DATA SANITIZATION AGAINST NOSSQL QUERY INJECTION
@@ -89,6 +91,7 @@ app.use((req, res, next) => {
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/bookings", bookingRouter)
 app.use("/", viewRouter);
 
 // HANDLE ALL UNHANDLED ROUTES

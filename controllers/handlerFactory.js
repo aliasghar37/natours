@@ -14,6 +14,9 @@ exports.getAll = (Model) =>
         }
 
         const queryToUse = req.processedQuery || req.query;
+        if (queryToUse.name) {
+            queryToUse.name = { $regex: queryToUse.name, $options: "i" };
+        }
         const features = new ApiFeatures(Model.find(filter), queryToUse)
             .filter()
             .sort()
