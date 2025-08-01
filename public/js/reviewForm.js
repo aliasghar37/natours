@@ -5,7 +5,7 @@ export const addReview = async (userId, tourId, rating, review) => {
     try {
         const res = await axios({
             method: "POST",
-            url: `/api/v1/tours/${tourId}/reviews`,
+            url: `${process.env.API_BASE_URL}/api/v1/tours/${tourId}/reviews`,
             data: {
                 review,
                 rating,

@@ -5,7 +5,7 @@ export const signup = async (name, email, password, passwordConfirm) => {
     try {
         const res = await axios({
             method: "POST",
-            url: "/api/v1/users/signup",
+            url: `${process.env.API_BASE_URL}/api/v1/users/signup`,
             data: {
                 name,
                 email,

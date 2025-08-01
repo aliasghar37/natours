@@ -5,7 +5,7 @@ export const searchTours = async (name) => {
     try {
         const res = await axios({
             method: "GET",
-            url: `/api/v1/tours?name=${encodeURIComponent(name)}`,
+            url: `${process.env.API_BASE_URL}/api/v1/tours?name=${encodeURIComponent(name)}`,
         });
         const tours = res.data.data.data;
         if (res.data.status === "success") {

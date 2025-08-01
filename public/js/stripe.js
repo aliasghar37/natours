@@ -1,13 +1,13 @@
 import axios from "axios";
 import { showAlert } from "./alerts";
 const stripe = Stripe(
-    "pk_test_51RppW2IfUbJPnEseCuYSuzFtwnJjjxGVWpagCLM99DWqX7PjKR4l658MZUGsWJDU2H0dsbcBLJZJHrq3oy2A3SWz00c1UUbxiv"
+    process.env.STRIPE_PUBLIC_KEY
 );
 
 export const bookTour = async (tourId) => {
     try {
         const session = await axios(
-            `/api/v1/bookings/checkout-session/${tourId}`
+            `${process.env.API_BASE_URL}/api/v1/bookings/checkout-session/${tourId}`
         );
         window.location = session.data.session.url;
     } catch (error) {

@@ -5,7 +5,7 @@ export const login = async (email, password) => {
     try {
         const res = await axios({
             method: "POST",
-            url: "/api/v1/users/login",
+            url: `${process.env.API_BASE_URL}/api/v1/users/login`,
             data: {
                 email,
                 password,
@@ -26,7 +26,7 @@ export const logout = async () => {
     try {
         const res = await axios({
             method: "GET",
-            url: "/api/v1/users/logout",
+            url: `${process.env.API_BASE_URL}/users/logout`,
         });
         if (res.data.status === "success") {
             showAlert("success", "Logged out successfully!");
@@ -43,7 +43,7 @@ export const forgotPassword = async (email) => {
     try {
         const res = await axios({
             method: "POST",
-            url: "/api/v1/users/forgotPassword",
+            url: `${process.env.API_BASE_URL}/api/v1/users/forgotPassword`,
             data: {
                 email,
             },
@@ -66,7 +66,7 @@ export const resetPassword = async (password, passwordConfirm, token) => {
     try {
         const res = await axios({
             method: "PATCH",
-            url: `/api/v1/users/resetPassword/${token}`,
+            url: `${process.env.API_BASE_URL}/api/v1/users/resetPassword/${token}`,
             data: {
                 password,
                 passwordConfirm,
