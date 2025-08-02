@@ -18,6 +18,9 @@ const userRouter = require(`${__dirname}/routes/userRoutes.js`);
 const reviewRouter = require(`${__dirname}/routes/reviewRoutes.js`);
 const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 const bookingRouter = require(`${__dirname}/routes/bookingRoutes.js`);
+const bookingController = require(
+    `${__dirname}/controllers/bookingController.js`
+);
 
 const app = express();
 
@@ -42,6 +45,12 @@ const limiter = rateLimit({
     message: "Too many request from this IP, please try again in an hour",
 });
 app.use("/api", limiter);
+
+app.use(
+    "/webhook-checkout",
+    express.raw({ type: "application/json" }),
+    bookingController.webhookCheckout
+);
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: "10kb" }));

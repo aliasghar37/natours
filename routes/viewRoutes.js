@@ -6,9 +6,10 @@ const bookingController = require(
     `${__dirname}/../controllers/bookingController.js`
 );
 
+router.use(viewController.alerts)
+
 router.get(
     "/",
-    bookingController.createBookingCheckout,
     authController.isLoggedIn,
     viewController.getOverview
 );

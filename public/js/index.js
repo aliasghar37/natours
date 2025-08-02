@@ -150,3 +150,6 @@ if (reviewForm)
         const review = document.querySelector(".form__input").value;
         addReview(userId, tourId, rating, review);
     });
+
+const alertMessage = document.querySelector("body").dataset.alert;
+if (alert) showAlert("success", alertMessage);
