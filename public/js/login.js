@@ -26,7 +26,7 @@ export const logout = async () => {
     try {
         const res = await axios({
             method: "GET",
-            url: `${process.env.API_BASE_URL}/users/logout`,
+            url: `${process.env.API_BASE_URL}/api/v1/users/logout`,
         });
         if (res.data.status === "success") {
             showAlert("success", "Logged out successfully!");

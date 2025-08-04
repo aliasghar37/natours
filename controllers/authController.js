@@ -22,9 +22,13 @@ const createAndSendToken = (user, statusCode, res) => {
         ),
         httpOnly: true,
     };
-    if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
+    if (process.env.NODE_ENV === "production") {
+        cookieOptions.secure = true;
+        cookieOptions.sameSite = "Lax";
+    }
     res.cookie("jwt", token, cookieOptions);
 
+    user.password = undefined;
     res.status(statusCode).json({
         status: "success",
         token,
@@ -47,8 +51,12 @@ exports.signup = catchAsync(async (req, res, next) => {
     // exclude password from sending in response
     const selectedUser = await User.findById(newUser._id);
 
-    const url = `${req.protocol}://${req.get("host")}/me`;
-    await new Email(selectedUser, url).sendWelcome();
+    try {
+        const url = `${req.protocol}://${req.get("host")}/me`;
+        await new Email(selectedUser, url).sendWelcome();
+    } catch (error) {
+        console.log("ERROR 💥: Email sending failed! -> ", error.message);
+    }
 
     // IMMEDIATELY LOG IN THE USER AS HE SIGNS UP
     createAndSendToken(selectedUser, 200, res);
@@ -165,10 +173,16 @@ exports.isLoggedIn = async (req, res, next) => {
 };
 
 exports.logout = (req, res) => {
-    res.cookie("jwt", "loggedout", {
+    const cookieOptions = {
         expires: new Date(Date.now() + 5 * 1000),
         httpOnly: true,
-    });
+    };
+    if (process.env.NODE_ENV === "production") {
+        cookieOptions.secure = true;
+        cookieOptions.sameSite = "Lax";
+    }
+
+    res.cookie("jwt", "loggedout", cookieOptions);
     res.status(200).json({ status: "success" });
 };
 
@@ -245,7 +259,7 @@ exports.resetPassword = async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpires = undefined;
-    
+
     await user.save({ validateBeforeSave: true });
 
     // 3) update changedpasswordat property for user using mongoose middleware
