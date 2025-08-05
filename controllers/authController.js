@@ -21,8 +21,8 @@ const createAndSendToken = (user, statusCode, req, res) => {
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
         httpOnly: true,
-        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
-        sameSite: "None"
+        secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+        sameSite: "None",
     };
     res.cookie("jwt", token, cookieOptions);
 
@@ -172,19 +172,20 @@ exports.isLoggedIn = async (req, res, next) => {
 
 exports.logout = (req, res) => {
     const cookieOptions = {
-        expires: new Date(Date.now() + 5 * 1000),
+        maxAge: 5000,
         httpOnly: true,
+        secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+        sameSite: "None",
     };
-    if (process.env.NODE_ENV === "production") {
-        cookieOptions.secure = true;
-        cookieOptions.sameSite = "None";
-    }
 
     res.cookie("jwt", "loggedout", cookieOptions);
     // Set headers to prevent caching
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
     res.status(200).json({ status: "success" });
 };
 
