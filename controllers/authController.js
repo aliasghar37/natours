@@ -21,7 +21,8 @@ const createAndSendToken = (user, statusCode, req, res) => {
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
         httpOnly: true,
-        secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+        sameSite: "None"
     };
     res.cookie("jwt", token, cookieOptions);
 
@@ -176,10 +177,14 @@ exports.logout = (req, res) => {
     };
     if (process.env.NODE_ENV === "production") {
         cookieOptions.secure = true;
-        cookieOptions.sameSite = "Lax";
+        cookieOptions.sameSite = "None";
     }
 
     res.cookie("jwt", "loggedout", cookieOptions);
+    // Set headers to prevent caching
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.status(200).json({ status: "success" });
 };
 
