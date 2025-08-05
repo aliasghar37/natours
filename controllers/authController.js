@@ -13,7 +13,7 @@ const signToken = (id) => {
     });
 };
 
-const createAndSendToken = (user, statusCode, res) => {
+const createAndSendToken = (user, statusCode, req, res) => {
     const token = signToken(user._id);
 
     const cookieOptions = {
@@ -21,11 +21,8 @@ const createAndSendToken = (user, statusCode, res) => {
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
         httpOnly: true,
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
     };
-    if (process.env.NODE_ENV === "production") {
-        cookieOptions.secure = true;
-        cookieOptions.sameSite = "Lax";
-    }
     res.cookie("jwt", token, cookieOptions);
 
     user.password = undefined;
@@ -59,7 +56,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     }
 
     // IMMEDIATELY LOG IN THE USER AS HE SIGNS UP
-    createAndSendToken(selectedUser, 200, res);
+    createAndSendToken(selectedUser, 200, req, res);
 
     // res.status(201).json({
     //     status: "success",
@@ -87,7 +84,7 @@ exports.login = async (req, res, next) => {
         return next(err);
     }
 
-    createAndSendToken(user, 200, res);
+    createAndSendToken(user, 200, req, res);
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -135,7 +132,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     // Put entire user data on the req and res
     req.user = currentUser;
     res.locals.user = currentUser;
-    // createAndSendToken(currentUser, 200, res);
+    // createAndSendToken(currentUser, 200, req, res);
     // GRANT ACCESS TO THE PROTECTED ROUTE
     next();
 });
@@ -264,7 +261,7 @@ exports.resetPassword = async (req, res, next) => {
 
     // 3) update changedpasswordat property for user using mongoose middleware
     // 4) log the user in and send jwt
-    createAndSendToken(user, 200, res);
+    createAndSendToken(user, 200, req, res);
 };
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -290,5 +287,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     await user.save({ validateBeforeSave: true });
     // log in user and send jwt
-    createAndSendToken(user, 200, res);
+    createAndSendToken(user, 200, req, res);
 });
