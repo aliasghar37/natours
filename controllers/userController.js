@@ -4,7 +4,7 @@ const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
 const handlerFactory = require(`${__dirname}/../controllers/handlerFactory.js`);
 const sharp = require("sharp");
 const multer = require("multer");
-const supabase = require(`${__dirname}/../utils/supabase.js`);
+const supabase = require(`${__dirname}/../utils/supabaseClient.js`);
 
 // UPLOAD IMAGE IN THE STORAGE
 
