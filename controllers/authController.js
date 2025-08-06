@@ -229,12 +229,19 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
         res.status(200).json({
             status: "success",
-            message: "Token sent to email"
+            message: "Token sent to email",
         });
     } catch (err) {
+        console.log("ERROR 💥: Email sending failed", err);
         user.passwordResetToken = undefined;
         user.passwordResetTokenExpires = undefined;
         await user.save({ validateBeforeSave: false });
+        return next(
+            new AppError(
+                "There was an error while sending the email, please try again.",
+                500
+            )
+        );
     }
 });
 
@@ -244,10 +251,13 @@ exports.resetPassword = async (req, res, next) => {
         .createHash("sha256")
         .update(req.params.token)
         .digest("hex");
+
+    console.log("DEBUG 🐞: HASHED TOKEN", hashedToken);
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetTokenExpires: { $gt: Date.now() },
     });
+    console.log("DEBUG 🐞: USER QUERY RESULTS", user);
     if (!user) {
         const err = new AppError("Token is invalid or expired!");
         return next(err);

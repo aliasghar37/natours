@@ -23,7 +23,8 @@ const bookingController = require(
 );
 
 const app = express();
-app.enable("trust proxy");
+if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
+else app.set("trust proxy", false);
 
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
@@ -42,8 +43,9 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 // RATE LIMITER
 const limiter = rateLimit({
     max: 200,
-    windowsMs: 60 * 60 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     message: "Too many request from this IP, please try again in an hour",
+    trustProxy: true,
 });
 app.use("/api", limiter);
 
