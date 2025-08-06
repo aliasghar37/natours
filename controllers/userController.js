@@ -4,6 +4,7 @@ const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
 const handlerFactory = require(`${__dirname}/../controllers/handlerFactory.js`);
 const sharp = require("sharp");
 const multer = require("multer");
+const supabase = require(`${__dirname}/../utils/supabase.js`);
 
 // UPLOAD IMAGE IN THE STORAGE
 
@@ -33,18 +34,44 @@ const upload = multer({
 
 exports.uploadUserPhoto = upload.single("photo");
 
-exports.resizeUserPhoto = async (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     if (!req.file) return next();
     req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
-    await sharp(req.file.buffer)
+    // STORING LOCALLY
+    // await sharp(req.file.buffer)
+    //     .resize(500, 500)
+    //     .toFormat("jpeg")
+    //     .jpeg({ quality: 90 })
+    //     .toFile(`public/img/users/${req.file.filename}`);
+
+    // STORING ON SUPABASE
+    const resizedImageBuffer = await sharp(req.file.buffer)
         .resize(500, 500)
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
-        .toFile(`public/img/users/${req.file.filename}`);
-
+        .toBuffer();
+    // Upload to supabase storage
+    const { data, error } = await supabase.storage
+        .from("user-photos")
+        .upload(req.file.filename, resizedImageBuffer, {
+            contentType: "image/jpeg",
+            cacheControl: "3600",
+            upsert: false,
+        });
+    if (error) {
+        console.log("FILE UPLOAD ERROR 💥: ", error);
+        return next(
+            new AppError("Could not upload file to cloud storage", 500)
+        );
+    }
+    // Get public url
+    const { data: urlData } = supabase.storage
+        .from("user-photos")
+        .getPublicUrl(req.file.filename);
+    req.file.cloudUrl = urlData.getPublicUrl;
     next();
-};
+});
 
 const filterObj = (obj, ...allowedFields) => {
     const newObj = {};
@@ -54,7 +81,7 @@ const filterObj = (obj, ...allowedFields) => {
     return newObj;
 };
 
-exports.updateMe = async (req, res, next) => {
+exports.updateMe = catchAsync(async (req, res, next) => {
     // Check if password/passwordConfirm exists
 
     if (req.body.password || req.body.passwordConfirm) {
@@ -66,13 +93,14 @@ exports.updateMe = async (req, res, next) => {
     }
     // If not, then filter the body before updating
     const filteredBody = filterObj(req.body, "name", "email");
-    if (req.file) filteredBody.photo = req.file.filename;
+    // if (req.file) filteredBody.photo = req.file.filename; //FOR LOCAL
+    if (req.file) filteredBody.photo = req.file.cloudUrl; //FOR SUPABASE
 
     // Update the user document with filtered body
     const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         filteredBody,
-        { new: true, runValidator: true }
+        { new: true, runValidators: true }
     );
 
     res.status(200).json({
@@ -81,10 +109,10 @@ exports.updateMe = async (req, res, next) => {
             user: updatedUser,
         },
     });
-};
+});
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-    await User.findByIdAndUpdate(req.user.id, { select: false });
+    await User.findByIdAndUpdate(req.user.id, { active: false });
 
     res.status(204).json({
         status: "success",

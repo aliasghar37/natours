@@ -89,7 +89,7 @@ app.set("query parser", "extended");
 app.use((req, res, next) => {
     res.setHeader(
         "Content-Security-Policy",
-        "img-src 'self' data: https://api.maptiler.com"
+        "img-src 'self' data: https://api.maptiler.com https://*.supabase.co"
     );
     next();
 });
