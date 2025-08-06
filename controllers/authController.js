@@ -246,13 +246,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.resetPassword = async (req, res, next) => {
-    console.log("DEBUG: Reset Password Initiated");
-    console.log(
-        "DEBUG: Raw token from URL (req.params.token):",
-        req.params.token
-    );
     if (!req.params.token) {
-        console.error("DEBUG: Reset token is missing in request");
+        console.error("ERROR 💥: Reset token is missing in request");
         return next(new AppError("Reset token is missing!", 400));
     }
     // 1) Get user based on the reset token
@@ -261,17 +256,14 @@ exports.resetPassword = async (req, res, next) => {
         .update(req.params.token)
         .digest("hex");
 
-    console.log("DEBUG 🐞: HASHED TOKEN", hashedToken);
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetTokenExpires: { $gt: Date.now() },
     });
-    console.log("DEBUG 🐞: USER QUERY RESULTS", user);
     if (!user) {
         const err = new AppError("Token is invalid or expired!", 400);
         return next(err);
     }
-    console.log("DEBUG: User found for password reset:", user.email);
     // 2) If token in not expired and there is user then set new password
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
