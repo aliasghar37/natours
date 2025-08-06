@@ -59,21 +59,21 @@ module.exports = class Email {
 
             // 3) Create transport and send email
             await brevo.sendTransacEmail(message);
+        } else {
+            // MAILTRAP
+            const mailtrap = this.mailtrap();
+
+            // 2) Define Email options
+            const mailOptions = {
+                from: this.from,
+                to: this.to,
+                subject,
+                html,
+                text: htmlToText.convert(html),
+            };
+            // 3) Create a transport and send email
+            await mailtrap.sendMail(mailOptions);
         }
-
-        // MAILTRAP
-        const mailtrap = this.mailtrap();
-
-        // 2) Define Email options
-        const mailOptions = {
-            from: this.from,
-            to: this.to,
-            subject,
-            html,
-            text: htmlToText.convert(html),
-        };
-        // 3) Create a transport and send email
-        await mailtrap.sendMail(mailOptions);
     }
 
     async sendWelcome() {
