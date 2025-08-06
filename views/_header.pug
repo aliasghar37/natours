@@ -13,7 +13,7 @@ header.header
             a.nav__el(href="/my-bookings") My bookings
             a.nav__el.nav__el--logout Log out
             a.nav__el(href="/me")
-                img.nav__user-img(src=`${user.photo ? user.photo : "userPhoto.src = res.data.data.user.photo;"}` alt=`Photo of ${user.name}`)
+                img.nav__user-img(src=`${user.photo ? user.photo : "https://hikkqsyijbvmumculhbb.supabase.co/storage/v1/object/public/user-photos//default.jpg"}` alt=`Photo of ${user.name}`)
                 span= user.name.split(" ")[0]
         else 
             a.nav__el(href="/login") Log in 

@@ -8,7 +8,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "A user must have a name"],
     },
-    photo: { type: String, default: "default.jpg" },
+    photo: {
+        type: String,
+        default:
+            "https://hikkqsyijbvmumculhbb.supabase.co/storage/v1/object/public/user-photos//default.jpg",
+    },
     email: {
         type: String,
         required: [true, "A user must have an email"],
