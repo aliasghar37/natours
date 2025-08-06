@@ -69,7 +69,7 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     const { data: urlData } = supabase.storage
         .from("user-photos")
         .getPublicUrl(req.file.filename);
-    req.file.cloudUrl = urlData.getPublicUrl;
+    req.file.cloudUrl = urlData.publicUrl;
     next();
 });
 
