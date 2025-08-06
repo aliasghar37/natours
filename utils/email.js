@@ -58,7 +58,7 @@ module.exports = class Email {
             message.to = [{ email: this.to, name: this.firstName }];
 
             // 3) Create transport and send email
-            brevo.sendTransacEmail(message);
+            await brevo.sendTransacEmail(message);
         }
 
         // MAILTRAP

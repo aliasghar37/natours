@@ -214,7 +214,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
             "Couldn't find the user with this email. Please try again",
             404
         );
-        next(err);
+        return next(err);
     }
     // Generate the random reset token
     const resetToken = await user.createPasswordResetToken();
@@ -229,17 +229,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
         res.status(200).json({
             status: "success",
+            message: "Token sent to email"
         });
     } catch (err) {
         user.passwordResetToken = undefined;
         user.passwordResetTokenExpires = undefined;
         await user.save({ validateBeforeSave: false });
-        return next(
-            new AppError(
-                "There was an error while sending the email, please try again.",
-                500
-            )
-        );
     }
 });
 

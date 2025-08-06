@@ -51,9 +51,9 @@ export const forgotPassword = async (email) => {
         if (res.data.status === "success") {
             showAlert(
                 "success",
-                `Verification email sent to "${email}", check it out!`
+                `Verification email has been sent, check it out!`
             );
-            window.setInterval(() => {
+            window.setTimeout(() => {
                 location.assign("/");
             }, 2000);
         }
