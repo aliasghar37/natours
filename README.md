@@ -1,10 +1,8 @@
 # 🌍 Natours API & Website
+[Live Demo](https://natours-ali.vercel.app) or [Watch Video](https://www.linkedin.com/posts/activity-7358957013130768387-9xsr)
 
 A full-stack web application for booking tours, built with **Node.js**, **Express**, **MongoDB**, and **Pug** for server-side rendering. This project focuses on backend functionality, secure authentication, and seamless Stripe-powered payment processing.
 
-> 🟢 **Live Demo**: [https://natours-ali.vercel.app](https://natours-ali.vercel.app)
-
----
 
 ## ✨ Features
 
@@ -65,7 +63,7 @@ Use this test credit card to simulate a successful payment:
 # 📬 API Documentation
 
 You can view the full API documentation here:  
-👉 [https://docs.google.com/document/d/1a2g7lWTAU0rF0kDA42VOT2Rh_UXB9_CSy4zDuNKjy-A](https://docs.google.com/document/d/1a2g7lWTAU0rF0kDA42VOT2Rh_UXB9_CSy4zDuNKjy-A)
+👉 [link](https://docs.google.com/document/d/1a2g7lWTAU0rF0kDA42VOT2Rh_UXB9_CSy4zDuNKjy-A)
 
 ---
 
