@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     photo: {
         type: String,
         default:
-            "https://hikkqsyijbvmumculhbb.supabase.co/storage/v1/object/public/user-photos//default.jpg",
+            "https://fuvsngswgnsswxfrmtrq.supabase.co/storage/v1/object/public/user-photos/default.jpg",
     },
     email: {
         type: String,
